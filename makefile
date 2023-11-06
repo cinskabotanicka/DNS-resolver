@@ -1,3 +1,10 @@
+/**
+ * Project:     DNS resolver
+ * @file        makefike
+ * 
+ * @author Martina Hromádková <xhroma15@stud.fit.vutbr.cz>
+ */
+ 
 CC = gcc
 CFLAGS = -Wall
 LDFLAGS = -lm
