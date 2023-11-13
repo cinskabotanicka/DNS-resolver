@@ -1,9 +1,6 @@
-/**
- * Project:     DNS resolver
- * @file        makefike
- * 
- * @author Martina Hromádková <xhroma15@stud.fit.vutbr.cz>
- */
+# Project:     DNS resolver
+# @file        makefike 
+# @author Martina Hromádková <xhroma15>
  
 CC = gcc
 CFLAGS = -Wall
@@ -11,7 +8,7 @@ LDFLAGS = -lm
 
 # Source file and executable name
 SRC = server.c
-EXE = resolver
+EXE = dns
 
 all: $(EXE)
 
