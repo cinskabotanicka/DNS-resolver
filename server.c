@@ -60,6 +60,7 @@ void build_dns_query(uint8_t* query, struct dns_query* dns_query) {
 
     uint16_t* qclass_ptr = (uint16_t*)(qtype_ptr + 1);
     *qclass_ptr = htons(dns_query->qclass);
+
 }
 
 // Function to parse a DNS response message
@@ -269,8 +270,27 @@ int main(int argc, char *argv[]) {
     // Parse the DNS response, passing the initialized header as an argument
     parse_dns_response(response, response_len);
 
+    // Print the received DNS response (in hexadecimal)
+    printf("Received DNS Response (Hexadecimal):\n");
+    for (size_t i = 0; i < response_len; i++) {
+        printf("%02x ", response[i]);
+        if ((i + 1) % 16 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+
+    // Print the response length
+    printf("Received DNS Response Length: %zu\n", response_len);
+
+    // Get DNS response flags
+    uint16_t flags = ntohs(header.flags);
+    int authoritative = (flags >> 10) & 1;  // Bit 10 indicates authoritative answer
+    int recursive = recursion_desired;     
+    int truncated = (flags >> 9) & 1;     // Bit 9 indicates truncated message
+
     // Print the results as specified in the output format
-    printf("Authoritative: No, Recursive: %s, Truncated: No\n", recursion_desired ? "Yes" : "No");
+    printf("Authoritative: %s, Recursive: %s, Truncated: %s\n", authoritative ? "Yes" : "No", recursive ? "Yes" : "No", truncated ? "Yes" : "No");
 
     // Print question section
     printf("Question section (1)\n");
@@ -314,6 +334,7 @@ int main(int argc, char *argv[]) {
             printf("Unsupported record type\n");
         }
 
+        // Move to the next answer record
         answer_ptr += ntohs(data_len);
     }
 
