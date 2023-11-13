@@ -2,7 +2,7 @@
  * Project:     DNS resolver
  * @file        src/server.c
  * 
- * @author Martina Hromádková <xhroma15@stud.fit.vutbr.cz>
+ * @author Martina Hromádková <xhroma15>
  */
 
 #include <stdio.h>
@@ -72,7 +72,6 @@ void parse_dns_response(uint8_t* response, size_t response_len) {
 
     // Extract the DNS header
     struct dns_header* header = (struct dns_header*)response;
-    uint16_t qdcount = ntohs(header->qdcount);
     uint16_t ancount = ntohs(header->ancount);
 
     // Check if the response contains answer records
@@ -133,6 +132,18 @@ void parse_dns_response(uint8_t* response, size_t response_len) {
     }
 }
 
+// Function to print a help message
+void print_help() {
+    printf("DNS Resolver - Resolve domain names to IP addresses using DNS\n");
+    printf("Usage: dns [-r] [-x] [-6] -s server [-p port] address\n");
+    printf("Options:\n");
+    printf("  -r         Enable recursion (default: disabled)\n");
+    printf("  -x         Perform reverse DNS query (default: disabled)\n");
+    printf("  -6         Use IPv6 query (default: IPv4 query)\n");
+    printf("  -s server  Specify the DNS server (required)\n");
+    printf("  -p port    Specify the DNS server port (default: 53)\n");
+}
+
 int main(int argc, char *argv[]) {
     int recursion_desired = 0;
     int reverse_query = 0;
@@ -143,7 +154,7 @@ int main(int argc, char *argv[]) {
 
     // Parse command line arguments
     int opt;
-    while ((opt = getopt(argc, argv, "rx6s:p:")) != -1) {
+    while ((opt = getopt(argc, argv, "hrx6s:p:")) != -1) {
         switch (opt) {
             case 'r':
                 recursion_desired = 1;
@@ -160,6 +171,9 @@ int main(int argc, char *argv[]) {
             case 'p':
                 server_port = atoi(optarg);
                 break;
+            case 'h':
+                print_help();
+                exit(0);
             default:
                 fprintf(stderr, "Usage: dns [-r] [-x] [-6] -s server [-p port] adresa\n");
                 exit(1);
@@ -198,8 +212,31 @@ int main(int argc, char *argv[]) {
     my_query.qtype = ipv6_query ? 28 : 1; // Use 28 for AAAA, 1 for A
     my_query.qclass = 1; // IN (Internet)
 
+    if (reverse_query) {
+        // Reverse query: convert the target address to the appropriate format
+        char reverse_query_addr[256]; // Adjust the buffer size as needed
+        if (ipv6_query) {
+            // Convert IPv6 address to reverse DNS format
+            snprintf(reverse_query_addr, sizeof(reverse_query_addr), "%s.in-addr.arpa", target_address);
+        } else {
+            // Convert IPv4 address to reverse DNS format
+            char ip_parts[4][4]; // Maximum of 4 parts (255.255.255.255)
+            if (sscanf(target_address, "%3s.%3s.%3s.%3s", ip_parts[0], ip_parts[1], ip_parts[2], ip_parts[3]) == 4) {
+                snprintf(reverse_query_addr, sizeof(reverse_query_addr), "%s.%s.%s.%s.in-addr.arpa",
+                         ip_parts[3], ip_parts[2], ip_parts[1], ip_parts[0]);
+            } else {
+                fprintf(stderr, "Invalid IPv4 address format for reverse query.\n");
+                close(sock);
+                exit(1);
+            }
+        }
+
+        // Update the query name for the reverse query
+        my_query.qname = reverse_query_addr;
+    }
+
     // Allocate a buffer for the DNS query message
-    size_t query_len = sizeof(struct dns_header) + strlen(my_query.qname) + 2 + sizeof(struct dns_question);
+    size_t query_len = sizeof(struct dns_header) + strlen(my_query.qname) + 2;
     uint8_t query[query_len];
 
     // Build the DNS query message
@@ -225,7 +262,11 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // Parse the DNS response
+    // Declare and initialize the header variable in main
+    struct dns_header header;
+    memset(&header, 0, sizeof(struct dns_header));
+
+    // Parse the DNS response, passing the initialized header as an argument
     parse_dns_response(response, response_len);
 
     // Print the results as specified in the output format
@@ -236,9 +277,9 @@ int main(int argc, char *argv[]) {
     printf("  %s, %s, %s\n", my_query.qname, ipv6_query ? "AAAA" : "A", "IN");
 
     // Print answer section
-    printf("Answer section (%d)\n", ntohs(header->ancount));
+    printf("Answer section (%d)\n", ntohs(header.ancount));
     uint8_t* answer_ptr = response + sizeof(struct dns_header);
-    for (int i = 0; i < ntohs(header->ancount); i++) {
+    for (int i = 0; i < ntohs(header.ancount); i++) {
         // Extract and print the name, type, class, TTL, and data
         int name_len = *answer_ptr;
         char name[256];
@@ -277,12 +318,55 @@ int main(int argc, char *argv[]) {
     }
 
     // Print authority section
-    printf("Authority section (%d)\n", ntohs(header->nscount));
-    // TODO
+    printf("Authority section (%d)\n", ntohs(header.nscount));
+    uint8_t* authority_ptr = answer_ptr;
+    for (int i = 0; i < ntohs(header.nscount); i++) {
+        // Extract and print the name, type, class, TTL, and data
+        int name_len = *authority_ptr;
+        char name[256];
+        memcpy(name, authority_ptr + 1, name_len);
+        name[name_len] = '\0';
+        authority_ptr += name_len + 1;
+        uint16_t type, qclass, data_len;
+        uint32_t ttl;
+        memcpy(&type, authority_ptr, sizeof(uint16_t));
+        authority_ptr += sizeof(uint16_t);
+        memcpy(&qclass, authority_ptr, sizeof(uint16_t));
+        authority_ptr += sizeof(uint16_t);
+        memcpy(&ttl, authority_ptr, sizeof(uint32_t));
+        authority_ptr += sizeof(uint32_t);
+        memcpy(&data_len, authority_ptr, sizeof(uint16_t));
+        authority_ptr += sizeof(uint16_t);
+
+        printf("  %s, %s, %s, %u, ", name, ntohs(type) == 1 ? "A" : "CNAME", "IN", ntohl(ttl));
+
+        // Extract and print the data (IP address or CNAME)
+        if (ntohs(type) == 1) { // A record with 4-byte data
+            char ip_address[16];
+            inet_ntop(AF_INET, authority_ptr, ip_address, sizeof(ip_address));
+            printf("%s\n", ip_address);
+        } else if (ntohs(type) == 5) { // CNAME record
+            int cname_len = *authority_ptr;
+            char cname[256];
+            memcpy(cname, authority_ptr + 1, cname_len);
+            cname[cname_len] = '\0';
+            printf("%s\n", cname);
+        } else {
+            printf("Unsupported record type\n");
+        }
+
+        authority_ptr += ntohs(data_len);
+    }
 
     // Print additional section
-    printf("Additional section (%d)\n", ntohs(header->arcount));
-    // TODO
+    printf("Additional section (%d)\n", ntohs(header.arcount));
+    // uint8_t* additional_ptr = authority_ptr; // Adjust the pointer accordingly
+    for (int i = 0; i < ntohs(header.arcount); i++) {
+        // Extract and print additional section as needed
+        // The format can vary based on the specific resource records.
+        // You may need to handle different record types, like MX, TXT, etc.
+        // Parse and print data similar to previous sections.
+    }
 
     // Close the socket and clean up
     close(sock);
