@@ -4,10 +4,9 @@
  
 CC = gcc
 CFLAGS = -Wall
-LDFLAGS = -lm
-
+LDFLAGS = -lm, -lstdc++
 # Source file and executable name
-SRC = server.c
+SRC = server.cpp
 EXE = dns
 
 all: $(EXE)
