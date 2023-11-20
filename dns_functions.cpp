@@ -53,15 +53,13 @@ const char * dns_class(int type){
 	}
 }
 
-// pole pro prevod hex na char
-char const hex_to_char[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
 // konvertuje ipv6 adresu ze zkraceneho formatu na plny format (všech 32 cisel)
 std::string ipv6(std::string name){
 	std::string out;
 	uint8_t i6_addr[16];
     if(inet_pton(AF_INET6,name.c_str(),i6_addr)){ 
 		// prevod na hex
+		char const hex_to_char[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 		for(int i = 0 ; i < 16 ; i ++){ 
 			out+=hex_to_char[i6_addr[i]>>4];
 			out+='.';
@@ -125,7 +123,7 @@ std::string name_convert(std::string name){
 	return out;
 }
 
-//transformuje zapis jmena v paketu na citelnou podobu (vcetne pointeru)
+// transformuje zapis jmena v paketu na citelnou podobu (vcetne pointeru)
 std::string name(char *buffer,int start_offset, int *len){
 	//buffer pro cteni celeho paketu (zacina hlavickou)
 	//len vrati delku jmena co se precetla z paketu
@@ -171,7 +169,7 @@ std::string name(char *buffer,int start_offset, int *len){
 	return addr;	
 }
 
-//vypise info z jednotlivych sekci (answer, additional, authoritative)
+// vypise info z jednotlivych sekci (answer, additional, authoritative)
 void print_response_data(char *buffer,int *pac_len){
 	int len;
 	std::string name_in_answer = name(buffer,*pac_len,&len);
@@ -189,7 +187,7 @@ void print_response_data(char *buffer,int *pac_len){
 	// vypis typu
 	if(!rr_type_str){
 		// pokud byl vracen nepodporovany typ
-		fprintf(stderr,", Unknown type in DNS response: %d",rr_type_int);
+		fprintf(stderr,", Neznámý typ v DNS odpovědi: %d",rr_type_int);
 	}else{
 		printf(", %s",rr_type_str);//vypis typu v opdovedi
 	}
@@ -198,7 +196,7 @@ void print_response_data(char *buffer,int *pac_len){
 	const char *rr_class_str = dns_class(rr_class_int);
 	if(!rr_class_str){
 		// pokud byl vracen nepodporovany typ
-		fprintf(stderr,", Unknown class in DNS response: %d\n",rr_class_int);
+		fprintf(stderr,", Neznámá třída v DNS odpovědi: %d\n",rr_class_int);
 		exit(1);
 	}else{
 		printf(", %s",rr_class_str); // vypis classy odpovedi
@@ -251,7 +249,7 @@ void print_response_data(char *buffer,int *pac_len){
 	*pac_len+=rr_rlen_int; // posun o delku rdata
 }
 
-//funkce, ktera se spusti, pokud neprijde odpoved do 5 sekund
+// funkce, ktera se spusti, pokud neprijde odpoved do 5 sekund
 void timeout(int sig){
 	printf("Dotaz byl prilis dlouho bez odpovedi.\n");
 	exit(1);

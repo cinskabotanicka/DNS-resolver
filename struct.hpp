@@ -7,7 +7,7 @@
 
 #include <unistd.h>
 
-//struktura dns hlavičky
+// struktura dns hlavičky
 struct dns_header{
 	uint16_t id;
 	/*počet bitů	flagy:
@@ -27,7 +27,7 @@ struct dns_header{
 	uint16_t arcount; //counter pro addional section
 };
 
-//resource record data
+// resource record data
 struct rr_data{
 	uint16_t type;
 	uint16_t dclass; //1 pro internet
@@ -35,7 +35,7 @@ struct rr_data{
 	uint16_t rdlength;
 };
 
-//Start of Authority data
+// Start of Authority data
 struct SOA_data{
 	uint32_t serial; //serial number
 	uint32_t refresh; //refresh interval
@@ -44,7 +44,7 @@ struct SOA_data{
 	uint32_t minimum; //minimum TTL
 };
 
-//struktura pro dotaz
+// struktura pro dotaz
 struct question{
 	uint16_t qtype;
 	uint16_t qclass;
