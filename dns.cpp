@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 	
 	q->qclass = htons(1); // typ IN
 	
-	dns_hdr->flags=htons(dns_hdr->flags); // zbytek headeru je 0
+	dns_hdr->flags=htons(dns_hdr->flags); // zbytek hlavicky je 0
 	
 	// uziti UDP protokolu
 	int sd = socket(addr->sa_family, SOCK_DGRAM, IPPROTO_UDP);
@@ -143,22 +143,22 @@ int main(int argc, char **argv)
 
 	pac_len = 0;
 	struct dns_header *dns_hdr_ans = (struct dns_header *) buffer;
-	pac_len += 12; //dns header zabira 12 bytu
+	pac_len += 12; // dns header zabira 12 bytu
 	uint16_t flags = ntohs(dns_hdr_ans->flags);
 
-	if(flags&(0b0000010000000000)){ //vymaskovani AA flagu
+	if(flags&(0b0000010000000000)){ // vymaskovani AA flagu
 		// pokud je AA flag nastaveny na 1, tak je odpoved autoritativni
 		printf("Authoritative: Yes, ");
 	}else{
 		printf("Authoritative: No, ");
 	}
-	if(flags&(0b0000000100000000) && flags&(0b0000000010000000)){ //vymaskovani RD a RA flagu
+	if(flags&(0b0000000100000000) && flags&(0b0000000010000000)){ // vymaskovani RD a RA flagu
 		// pokud je RD i RA flag nastaveny na 1, tak je dotaz rekurzivni
 		printf("Recursive: Yes, ");
 	}else{
 		printf("Recursive: No, ");
 	}
-	if(flags&(0b0000001000000000)){ //vymaskovani TC flagu
+	if(flags&(0b0000001000000000)){ // vymaskovani TC flagu
 		// pokud je TC flag nastaveny na 1, tak je odpoved zkracena
 		printf("Truncated: Yes\n");
 	}else{
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 	// vypis dotazove casti
 	printf("Question section (%d)\n",count_q);
 	printf("  ");
-	if(count_q==1){//byl zaslan pouze 1 dotaz (pokud neni v odpovedi, tak nemuze byt vypsan)
+	if(count_q==1){ // podle zadani byl vzdy zaslan pouze 1 dotaz
 		// vypis jmena v question casti
 		int len = 0;
 		std::string name_in_question = name(buffer,pac_len,&len);
