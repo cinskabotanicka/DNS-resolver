@@ -3,9 +3,7 @@
 # @author Martina Hromádková <xhroma15>
  
 CXX = g++
-CFLAGS = -Wall
 CXXFLAGS = -Wall -std=c++11
-LDFLAGS = -lcatch
 
 # Source file and executable name
 SRC = dns.cpp argument_parser.cpp dns_functions.cpp
