@@ -1,0 +1,33 @@
+# DNS Resolver
+
+**Author:** Martina Hromádková  
+**Login:** xhroma15  
+**Date Created:** 19.11.2023
+
+
+## Popis
+Tento program DNS resolver je určen k překladu doménových jmen na IP adresy pomocí DNS. Umí zpracovávat standardní dotazy DNS a podporuje možnosti rekurze, reverzních dotazů DNS a dotazů IPv6.
+
+### Vlastnosti
+- Sestavení dotazu DNS a zpracování odpovědi
+- Podpora typů záznamů A (IPv4) a AAAA (IPv6)
+- Možnost reverzního dotazu DNS
+- Možnost dotazu IPv6
+- Zpracování chyb a analýza odpovědí
+
+### Omezení
+- Program nepodporuje všechny možné typy záznamů DNS, pokud dojde jiný formát, než A, AAAA, NS, CNAME, SOA či PTR, tak dojde k výpisu typu a dat v hexadecimálním formátu.
+
+## Použití
+./dns [-r] [-x] [-6] -s server [-p port] adress
+
+### Pořadí parametrů je libovolné. Popis parametrů je libovolný:
+
+-r: (Recursion Desired = 1), jinak bez rekurze.
+-x: Reverzní dotaz místo přímého dotazu.
+-6: Typ dotazu AAAA místo výchozího A.
+-s: IP adresa nebo název domény serveru, na který má být dotaz odeslán.
+-p port: Číslo portu, na který se má dotaz odeslat, výchozí 53.
+address: Adresa, na kterou se má dotazovat.
+
+Podrobnější informace jsou v dokumentaci manual.pdf
