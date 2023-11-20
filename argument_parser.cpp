@@ -9,7 +9,7 @@
 #include <iostream>
 
 void invalid_params() {
-    std::cerr << "Incorrect parameters. Use -h for help.\n";
+    std::cerr << "Špatně zadané argumenty. Použij -h pro zobrazení nápovědy.\n";
     exit(EXIT_FAILURE);
 }
 
